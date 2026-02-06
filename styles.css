@@ -396,11 +396,18 @@ body {
 
 /* Mobile Responsive Adjustments */
 @media (max-width: 768px) {
+    body {
+        overflow: auto;
+        /* Re-enable scrolling on body for mobile */
+        height: auto;
+    }
+
     .app-container {
         flex-direction: column;
         height: auto;
         min-height: 100vh;
-        overflow-y: auto;
+        overflow-y: visible;
+        /* Container should allow content to push height */
     }
 
     .sidebar {
