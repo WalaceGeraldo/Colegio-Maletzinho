@@ -441,7 +441,12 @@ body {
 
     .editor-area {
         padding: 1rem;
-        padding-bottom: 2rem;
+        padding-bottom: 150px;
+        /* Extra space to prevent content being cut off */
+        overflow: visible;
+        /* Let the page scroll naturally */
+        flex: none;
+        /* Don't try to flex height */
     }
 
     .top-bar {
