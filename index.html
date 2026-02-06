@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Plano Semanal - Malletzinho</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar / Navigation -->
+        <aside class="sidebar">
+            <div class="brand">
+                <h1>Planejador</h1>
+                <p>Educação Infantil</p>
+            </div>
+
+            <nav class="week-nav">
+                <button class="nav-btn active" data-day="segunda">
+                    <span class="day-icon">S</span>
+                    Segunda
+                </button>
+                <button class="nav-btn" data-day="terca">
+                    <span class="day-icon">T</span>
+                    Terça
+                </button>
+                <button class="nav-btn" data-day="quarta">
+                    <span class="day-icon">Q</span>
+                    Quarta
+                </button>
+                <button class="nav-btn" data-day="quinta">
+                    <span class="day-icon">Q</span>
+                    Quinta
+                </button>
+                <button class="nav-btn" data-day="sexta">
+                    <span class="day-icon">S</span>
+                    Sexta
+                </button>
+                <div class="separator"></div>
+                <button class="nav-btn config-btn" data-day="config">
+                    <span class="day-icon">⚙️</span>
+                    Configurações
+                </button>
+            </nav>
+
+            <div class="actions">
+                <button id="btn-preview" class="action-btn secondary">Visualizar</button>
+                <button id="btn-word" class="action-btn secondary" style="border-color: #2b579a; color: #aecbf7;">Salvar
+                    em Word</button>
+                <button id="btn-print" class="action-btn primary">Gerar PDF / Imprimir</button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="editor-area">
+            <header class="top-bar">
+                <h2 id="current-day-title">Segunda-feira</h2>
+                <div class="status-badge">Editando</div>
+            </header>
+
+            <form id="plan-form" class="form-grid">
+                <!-- Fields are injected by JS based on selected day -->
+            </form>
+        </main>
+    </div>
+
+    <!-- Hidden Printable Template -->
+    <div id="print-area" class="print-hidden">
+        <div class="document-page">
+            <table class="plan-table"
+                style="width: 100%; border-collapse: collapse; border: 1px solid black; table-layout: fixed;">
+                <thead>
+                    <!-- Header Rows Merged Here -->
+                    <tr>
+                        <th colspan="5" style="padding: 0; border: 1px solid black; background: #fff;">
+                            <table style="width: 100%; border-collapse: collapse; border: none; margin: 0;">
+                                <tr>
+                                    <td class="logo-area"
+                                        style="width: 220px; border-right: 1px solid black; border-bottom: 1px solid black; vertical-align: middle; text-align: center; padding: 5px;">
+                                        <img id="print-logo" src="imagens/Imagem1.jpg" alt="Logo da Escola"
+                                            class="logo-img"
+                                            onerror="console.error('Falha ao carregar logo'); this.style.display='none'; document.getElementById('logo-placeholder').style.display='flex';">
+                                        <div class="logo-placeholder" id="logo-placeholder" style="display: none;">Logo
+                                        </div>
+                                    </td>
+                                    <td class="header-text"
+                                        style="border-bottom: 1px solid black; vertical-align: middle; text-align: center; padding: 5px;">
+                                        <h1 class="school-name" style="margin: 0; font-size: 16pt;">CRECHE COMUNITÁRIA
+                                            MALLETZINHO</h1>
+                                        <br>
+                                        <h2 class="class-name" id="print-class-name"
+                                            style="margin: 0; font-weight: normal;">Berçário I</h2>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2"
+                                        style="border-top: none; padding: 5px; font-weight: bold; text-align: center;">
+                                        <span id="print-month" style="margin-right: 30px;">Plano do mês de
+                                            Fevereiro</span>
+                                        <span id="print-dates">DIAS 09/02/2026 até 13/02/2026</span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </th>
+                    </tr>
+                    <!-- End Header Rows -->
+                    <tr>
+                        <th width="20%">Segunda:</th>
+                        <th width="20%">Terça:</th>
+                        <th width="20%">Quarta:</th>
+                        <th width="20%">Quinta:</th>
+                        <th width="20%">Sexta:</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td id="cell-segunda"></td>
+                        <td id="cell-terca"></td>
+                        <td id="cell-quarta"></td>
+                        <td id="cell-quinta"></td>
+                        <td id="cell-sexta"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Library for DOCX Export -->
+    <script src="https://unpkg.com/html-docx-js/dist/html-docx.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>
