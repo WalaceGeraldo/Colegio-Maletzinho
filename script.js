@@ -110,7 +110,15 @@ let saveTimeout = null;
 
 // Init
 function init() {
-    setupAuth();
+    // Wait for firebase to be ready if not already
+    if (window.firebaseAuth) {
+        setupAuth();
+    } else {
+        window.addEventListener('firebase-ready', () => {
+            setupAuth();
+        });
+    }
+
     setupNavigation();
     setupProfileUI();
     setupIntroUI();
@@ -119,8 +127,11 @@ function init() {
 }
 
 function setupAuth() {
+    const { auth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } = window.firebaseAuth;
+    const { db, doc, setDoc } = window.firebaseDb;
+
     // 1. Check Auth State
-    auth.onAuthStateChanged(user => {
+    onAuthStateChanged(auth, user => {
         if (user) {
             // Logged In
             currentUser = user;
@@ -153,7 +164,7 @@ function setupAuth() {
             if (!email || !pass) return showError('Preencha email e senha');
 
             showLoading(true);
-            auth.signInWithEmailAndPassword(email, pass)
+            signInWithEmailAndPassword(auth, email, pass)
                 .catch(error => {
                     showError(handleAuthError(error));
                     showLoading(false);
@@ -169,10 +180,11 @@ function setupAuth() {
             if (!email || !pass) return showError('Preencha email e senha');
 
             showLoading(true);
-            auth.createUserWithEmailAndPassword(email, pass)
+            createUserWithEmailAndPassword(auth, email, pass)
                 .then((cred) => {
                     // Create initial data structure in Firestore
-                    return db.collection('users').doc(cred.user.uid).set(appState);
+                    const userRef = doc(db, "users", cred.user.uid);
+                    return setDoc(userRef, appState);
                 })
                 .catch(error => {
                     console.error("Signup error:", error);
@@ -185,8 +197,9 @@ function setupAuth() {
     // 4. Logout Action
     if (btnLogout) {
         btnLogout.addEventListener('click', () => {
-            auth.signOut();
-            location.reload();
+            signOut(auth).then(() => {
+                location.reload();
+            });
         });
     }
 }
@@ -219,12 +232,14 @@ function handleAuthError(error) {
 
 // Data Sync (Firestore)
 async function loadUserData(uid) {
-    const docRef = db.collection('users').doc(uid);
+    const { db, doc, getDoc, setDoc } = window.firebaseDb;
+    const docRef = doc(db, "users", uid);
 
     try {
-        const doc = await docRef.get();
-        if (doc.exists) {
-            const data = doc.data();
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+            const data = docSnap.data();
             // Merge with local appState structure to ensure compatibility
             appState = { ...appState, ...data };
 
@@ -240,7 +255,7 @@ async function loadUserData(uid) {
         } else {
             // First time user (or deleted data), save current default state
             console.log('No data found, creating default...');
-            await docRef.set(appState);
+            await setDoc(docRef, appState);
             renderIntroProfiles();
         }
     } catch (error) {
@@ -251,12 +266,15 @@ async function loadUserData(uid) {
 
 function saveToFirebase() {
     if (!currentUser) return;
+    const { db, doc, setDoc } = window.firebaseDb;
 
     // Setup debounced save
     if (saveTimeout) clearTimeout(saveTimeout);
 
     saveTimeout = setTimeout(() => {
-        db.collection('users').doc(currentUser.uid).set(appState)
+        const userRef = doc(db, "users", currentUser.uid);
+
+        setDoc(userRef, appState)
             .then(() => {
                 console.log("Document successfully written!");
             })
