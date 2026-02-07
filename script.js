@@ -61,86 +61,10 @@ let state = {
     ...createDefaultData() // Safe default
 };
 
-// Load Data & Migration
-function loadAppData() {
-    const savedProfiles = localStorage.getItem(STORAGE_KEY_PROFILES);
-    const savedOldV1 = localStorage.getItem(STORAGE_KEY_V1);
-
-    if (savedProfiles) {
-        try {
-            const parsed = JSON.parse(savedProfiles);
-            appState = { ...appState, ...parsed };
-
-            // Migration: Rename 'default' to 'daiane' if it exists and 'daiane' doesn't or should override
-            if (appState.profiles['default']) {
-                // Determine if we should migrate data
-                // If daiane already exists and is different, we might keep both? 
-                // But request says "leave daiane as default", implies renaming/moving.
-                // Let's copy default data to daiane if daiane is empty or just overwrite.
-
-                appState.profiles['daiane'] = {
-                    ...appState.profiles['default'],
-                    id: 'daiane',
-                    name: 'Daiane'
-                };
-
-                // Remove default
-                delete appState.profiles['default'];
-
-                // If current was default, switch to daiane
-                if (appState.currentProfileId === 'default') {
-                    appState.currentProfileId = 'daiane';
-                }
-
-                // Save immediately
-                localStorage.setItem(STORAGE_KEY_PROFILES, JSON.stringify(appState));
-                console.log('Migrated "default" profile to "daiane"');
-            }
-
-            // Validate integrity
-            if (!appState.profiles[appState.currentProfileId]) {
-                appState.currentProfileId = Object.keys(appState.profiles)[0] || 'daiane';
-            }
-        } catch (e) {
-            console.error('Error parsing profiles', e);
-        }
-    } else if (savedOldV1) {
-        // Migration from V1 (Single Save) to Profiles
-        try {
-            const oldData = JSON.parse(savedOldV1);
-            // Construct data object from old flat state
-            const migratedData = {
-                config: { ...createDefaultData().config, ...oldData.config },
-                days: { ...createDefaultData().days, ...oldData.days }
-            };
-
-            // Update default profile
-            if (appState.profiles['daiane']) {
-                appState.profiles['daiane'].data = migratedData;
-                console.log('Migrated V1 data to Daiane Profile');
-            }
-        } catch (e) {
-            console.error('Error migrating old data', e);
-        }
-    }
-
-    // Load active profile into working state
-    loadProfileToState(appState.currentProfileId);
-}
-
-function loadProfileToState(profileId) {
-    const profile = appState.profiles[profileId];
-    if (!profile) return;
-
-    // Merge data into working state (preserving currentView)
-    state = {
-        currentView: state.currentView, // Keep current view
-        ...JSON.parse(JSON.stringify(profile.data)) // Deep copy to avoid ref issues
-    };
-}
-
 // Initialize Data
-loadAppData();
+// loadAppData(); // Deprecated for Firebase
+// We wait for init() to setup auth
+
 
 // DOM Elements
 const appContainer = document.getElementById('app-container');
@@ -316,7 +240,15 @@ function setupAutoSave() {
             };
 
             // Persist AppState
-            localStorage.setItem(STORAGE_KEY_PROFILES, JSON.stringify(appState));
+            try {
+                localStorage.setItem(STORAGE_KEY_PROFILES, JSON.stringify(appState));
+            } catch (e) {
+                if (e.name === 'QuotaExceededError' || e.code === 22) {
+                    alert('⚠️ Erro de Salvamento: O armazenamento do navegador está cheio!\n\nIsso geralmente acontece por usar imagens muito pesadas na Logo.\nTente usar uma imagem menor ou remover a logo atual para continuar salvando.');
+                } else {
+                    console.error('Erro ao salvar:', e);
+                }
+            }
         }
     };
 
@@ -641,9 +573,15 @@ function renderProfilesList() {
     });
 }
 
+// Helper Functions
 function switchProfile(profileId) {
-    // 1. Ensure current state is saved before switching (though autosave usually handles it, good to force it)
-    if (window.saveCurrentState) window.saveCurrentState();
+    // 1. Save current state to current profile in AppState
+    if (appState.profiles[appState.currentProfileId]) {
+        appState.profiles[appState.currentProfileId].data = {
+            config: state.config,
+            days: state.days
+        };
+    }
 
     // 2. Update Id
     appState.currentProfileId = profileId;
@@ -656,21 +594,22 @@ function switchProfile(profileId) {
     renderView(); // Re-renders form with new data
 
     // 5. Persist the change in active ID
-    localStorage.setItem(STORAGE_KEY_PROFILES, JSON.stringify(appState));
+    saveToFirebase();
 }
 
 function deleteProfile(profileId) {
     if (!confirm('Tem certeza que deseja excluir este perfil?')) return;
 
-    // If deleting active profile, switch to default first
+    // If deleting active profile, switch to daiane first
     if (appState.currentProfileId === profileId) {
         switchProfile('daiane');
     }
 
     delete appState.profiles[profileId];
-    localStorage.setItem(STORAGE_KEY_PROFILES, JSON.stringify(appState));
+    saveToFirebase();
     renderProfilesList(); // Refresh list
 }
+
 
 function updateProfileUI() {
     const current = appState.profiles[appState.currentProfileId];

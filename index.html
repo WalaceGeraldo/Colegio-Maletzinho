@@ -10,16 +10,64 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;700&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+    <!-- Defines Firebase Config (User must fill this) -->
+    <script>
+        // Configuração do Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyCIuso17drxETO6gUP3exVUmNJDxovDB_s",
+            authDomain: "maletzinho.firebaseapp.com",
+            projectId: "maletzinho",
+            storageBucket: "maletzinho.firebasestorage.app",
+            messagingSenderId: "431512500152",
+            appId: "1:431512500152:web:72ae5b1dbacb516224414d"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+    </script>
 </head>
 
 <body>
-    <!-- Intro / Login Screen -->
-    <div id="intro-screen" class="intro-screen">
+    <!-- Login Screen (Replaces simple Intro) -->
+    <div id="login-screen" class="intro-screen">
         <div class="intro-card">
             <div class="intro-brand">
                 <h1>Planejador</h1>
                 <p>Educação Infantil</p>
+            </div>
+            <h2 id="login-title">Acesse sua conta</h2>
+
+            <div class="login-form">
+                <input type="email" id="login-email" placeholder="Seu E-mail" class="login-input">
+                <input type="password" id="login-password" placeholder="Sua Senha" class="login-input">
+
+                <div class="login-actions">
+                    <button id="btn-login" class="action-btn primary">Entrar</button>
+                    <button id="btn-signup" class="action-btn secondary">Criar Conta</button>
+                </div>
+                <p id="auth-error" style="color: #ef4444; margin-top: 10px; display: none;"></p>
+                <p id="auth-loading" style="color: #aecbf7; margin-top: 10px; display: none;">Conectando...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Selection Screen (Hidden by default, shown after login) -->
+    <div id="intro-screen" class="intro-screen hidden">
+        <div class="intro-card">
+            <div class="intro-brand">
+                <h1>Planejador</h1>
+                <div style="font-size: 0.9rem; color: #aecbf7; margin-top:5px;">Logado como: <span
+                        id="user-email-display"></span></div>
+                <button id="btn-logout"
+                    style="background:none; border:none; color: #ef4444; cursor:pointer; font-size: 0.8rem; margin-top: 5px;">Sair
+                    / Desconectar</button>
             </div>
             <h2>Quem vai planejar hoje?</h2>
 
@@ -33,7 +81,7 @@
         </div>
     </div>
 
-    <!-- New Profile Modal (Reused logic or specific for intro) -->
+    <!-- New Profile Modal -->
     <div id="intro-modal" class="modal-overlay hidden">
         <div class="modal">
             <header class="modal-header">
