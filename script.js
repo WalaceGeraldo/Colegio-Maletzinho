@@ -78,32 +78,15 @@ const btnWord = document.getElementById('btn-word');
 
 // Login Elements
 const loginScreen = document.getElementById('login-screen');
-const loginEmail = document.getElementById('login-email');
-const loginPass = document.getElementById('login-password');
-const btnLogin = document.getElementById('btn-login');
-const btnSignup = document.getElementById('btn-signup');
+// Elements removed: loginEmail, loginPass, btnLogin, btnSignup (not in use)
 const authError = document.getElementById('auth-error');
 const authLoading = document.getElementById('auth-loading');
-const userEmailDisplay = document.getElementById('user-email-display');
-const btnLogout = document.getElementById('btn-logout');
+const userDisplayName = document.getElementById('user-display-name');
+const btnLogout = document.getElementById('btn-logout-sidebar'); // Corrected ID from index.html check
+const btnGoogleLogin = document.getElementById('btn-google-login');
 
-// Intro DOM Elements
-const introScreen = document.getElementById('intro-screen');
-const introProfilesList = document.getElementById('intro-profiles-list');
-const introCreateBtn = document.getElementById('intro-create-btn');
-const introModal = document.getElementById('intro-modal');
-const introCloseModal = document.getElementById('intro-close-modal');
-const introProfileName = document.getElementById('intro-profile-name');
-const introSubmitProfile = document.getElementById('intro-submit-profile');
-
-// Profile DOM Elements
-const profileTrigger = document.getElementById('profile-trigger');
-const currentProfileName = document.getElementById('current-profile-name');
-const profileModal = document.getElementById('profile-modal');
-const closeModalBtn = document.getElementById('close-modal');
-const profilesList = document.getElementById('profiles-list');
-const newProfileNameInput = document.getElementById('new-profile-name');
-const createProfileBtn = document.getElementById('create-profile-btn');
+// Intro DOM Elements (Removed)
+// Profile DOM Elements (Removed)
 
 let currentUser = null; // Firebase User
 let saveTimeout = null;
@@ -120,14 +103,11 @@ function init() {
     }
 
     setupNavigation();
-    setupProfileUI();
-    setupIntroUI();
     setupAutoSave();
-    // renderIntroProfiles(); // Moved to inside setupAuth or loadUserData
 }
 
 function setupAuth() {
-    const { auth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } = window.firebaseAuth;
+    const { auth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, signInWithPopup, provider, GoogleAuthProvider } = window.firebaseAuth;
     const { db, doc, setDoc } = window.firebaseDb;
 
     // 1. Check Auth State
@@ -139,10 +119,23 @@ function setupAuth() {
 
             // UI Updates
             if (loginScreen) loginScreen.classList.add('hidden');
-            if (introScreen) introScreen.classList.remove('hidden'); // Show Profile Selection
-            if (userEmailDisplay) userEmailDisplay.textContent = user.email;
+            if (userDisplayName) userDisplayName.textContent = user.displayName || user.email;
 
-            // Load Data from Firestore
+            // Update Avatar
+            const avatarContainer = document.getElementById('user-avatar-display');
+            if (avatarContainer) {
+                avatarContainer.innerHTML = ''; // Clear
+                if (user.photoURL) {
+                    const img = document.createElement('img');
+                    img.src = user.photoURL;
+                    img.alt = user.displayName || 'Avatar';
+                    img.referrerPolicy = 'no-referrer'; // Handle Google image permissions
+                    avatarContainer.appendChild(img);
+                } else {
+                    const name = user.displayName || user.email || 'U';
+                    avatarContainer.textContent = name.charAt(0).toUpperCase();
+                }
+            }
             loadUserData(user.uid);
         } else {
             // Logged Out
@@ -151,48 +144,9 @@ function setupAuth() {
 
             // UI Updates
             appContainer.classList.add('hidden');
-            if (introScreen) introScreen.classList.add('hidden');
             if (loginScreen) loginScreen.classList.remove('hidden'); // Show Login
         }
     });
-
-    // 2. Login Action
-    if (btnLogin) {
-        btnLogin.addEventListener('click', () => {
-            const email = loginEmail.value;
-            const pass = loginPass.value;
-            if (!email || !pass) return showError('Preencha email e senha');
-
-            showLoading(true);
-            signInWithEmailAndPassword(auth, email, pass)
-                .catch(error => {
-                    showError(handleAuthError(error));
-                    showLoading(false);
-                });
-        });
-    }
-
-    // 3. Signup Action
-    if (btnSignup) {
-        btnSignup.addEventListener('click', () => {
-            const email = loginEmail.value;
-            const pass = loginPass.value;
-            if (!email || !pass) return showError('Preencha email e senha');
-
-            showLoading(true);
-            createUserWithEmailAndPassword(auth, email, pass)
-                .then((cred) => {
-                    // Create initial data structure in Firestore
-                    const userRef = doc(db, "users", cred.user.uid);
-                    return setDoc(userRef, appState);
-                })
-                .catch(error => {
-                    console.error("Signup error:", error);
-                    showError(handleAuthError(error));
-                    showLoading(false);
-                });
-        });
-    }
 
     // 4. Logout Action
     if (btnLogout) {
@@ -200,6 +154,34 @@ function setupAuth() {
             signOut(auth).then(() => {
                 location.reload();
             });
+        });
+    }
+    // 5. Google Login Action
+    if (btnGoogleLogin) {
+        btnGoogleLogin.addEventListener('click', () => {
+            showLoading(true);
+            signInWithPopup(auth, provider)
+                .then((result) => {
+                    // This gives you a Google Access Token. You can use it to access the Google API.
+                    const credential = GoogleAuthProvider.credentialFromResult(result);
+                    const token = credential.accessToken;
+                    // The signed-in user info.
+                    const user = result.user;
+                    console.log("Google Login Value:", user);
+
+                    // Force update profile name if needed
+                    if (user.displayName && appState.profiles[appState.currentProfileId]) {
+                        appState.profiles[appState.currentProfileId].name = user.displayName;
+                    }
+                    // onAuthStateChanged will handle the rest
+                }).catch((error) => {
+                    // Handle Errors here.
+                    const errorCode = error.code;
+                    const errorMessage = error.message;
+                    console.error("Google Login Error:", errorCode, errorMessage);
+                    showError(handleAuthError(error));
+                    showLoading(false);
+                });
         });
     }
 }
@@ -226,6 +208,8 @@ function handleAuthError(error) {
         case 'auth/wrong-password': return 'Senha incorreta.';
         case 'auth/email-already-in-use': return 'Email já cadastrado.';
         case 'auth/weak-password': return 'Senha muito fraca (mínimo 6 caracteres).';
+        case 'auth/unauthorized-domain': return 'Domínio não autorizado no Firebase. Adicione este domínio no console de autenticação.';
+        case 'auth/popup-closed-by-user': return 'Login cancelado pelo usuário.';
         default: return error.message;
     }
 }
@@ -238,26 +222,55 @@ async function loadUserData(uid) {
     try {
         const docSnap = await getDoc(docRef);
 
+        const profileName = currentUser.displayName || 'Usuário';
+        const profileId = 'default_profile';
+
         if (docSnap.exists()) {
             const data = docSnap.data();
-            // Merge with local appState structure to ensure compatibility
+            // Merge with local appState structure
             appState = { ...appState, ...data };
 
-            // Check Profile integrity
-            if (!appState.profiles[appState.currentProfileId]) {
-                appState.currentProfileId = Object.keys(appState.profiles)[0] || 'daiane';
+            // Ensure we have at least one profile or update the existing one
+            // We force the name from Google if available
+            if (!appState.currentProfileId || !appState.profiles[appState.currentProfileId]) {
+                // If broken state, re-init
+                appState.currentProfileId = profileId;
+                appState.profiles = {
+                    [profileId]: {
+                        id: profileId,
+                        name: profileName,
+                        data: createDefaultData()
+                    }
+                };
+            } else {
+                // Update name of current profile if user has a display name
+                if (currentUser.displayName) {
+                    appState.profiles[appState.currentProfileId].name = currentUser.displayName;
+                }
             }
 
             console.log('Data loaded from Firestore');
-
-            // Now render the profile selection screen
-            renderIntroProfiles();
         } else {
-            // First time user (or deleted data), save current default state
+            // First time user
             console.log('No data found, creating default...');
+
+            appState = {
+                currentProfileId: profileId,
+                profiles: {
+                    [profileId]: {
+                        id: profileId,
+                        name: profileName,
+                        data: createDefaultData()
+                    }
+                }
+            };
+
             await setDoc(docRef, appState);
-            renderIntroProfiles();
         }
+
+        // Enter app immediately
+        enterApp(appState.currentProfileId);
+
     } catch (error) {
         console.error("Error getting document:", error);
         alert('Erro ao carregar dados do servidor: ' + error.message);
@@ -285,60 +298,15 @@ function saveToFirebase() {
 }
 
 // Intro Logic
+// Intro Logic Removed
 function setupIntroUI() {
-    introCreateBtn.addEventListener('click', () => {
-        introModal.classList.remove('hidden');
-        introProfileName.focus();
-    });
-
-    introCloseModal.addEventListener('click', () => {
-        introModal.classList.add('hidden');
-    });
-
-    introSubmitProfile.addEventListener('click', () => {
-        const name = introProfileName.value.trim();
-        if (!name) return alert('Digite um nome para o perfil.');
-
-        const id = 'profile_' + Date.now();
-
-        // Create new profile entry
-        appState.profiles[id] = {
-            id: id,
-            name: name,
-            data: createDefaultData()
-        };
-
-        // Save
-        saveToFirebase();
-
-        introModal.classList.add('hidden');
-        enterApp(id);
-    });
+    // Removed
 }
 
 
+// Profile Rendering Removed
 function renderIntroProfiles() {
-    introProfilesList.innerHTML = '';
-    const profiles = Object.values(appState.profiles);
-
-    if (profiles.length === 0) {
-        // Should not happen as we create default, but just in case
-        appState.profiles['daiane'] = { id: 'daiane', name: 'Daiane', data: createDefaultData() };
-        profiles.push(appState.profiles['daiane']);
-    }
-
-    profiles.forEach(profile => {
-        const div = document.createElement('div');
-        div.className = 'intro-profile-item';
-        div.innerHTML = `
-            <div class="intro-avatar">${profile.name.charAt(0).toUpperCase()}</div>
-            <span class="intro-name">${profile.name}</span>
-        `;
-        div.addEventListener('click', () => {
-            enterApp(profile.id);
-        });
-        introProfilesList.appendChild(div);
-    });
+    // Removed
 }
 
 function enterApp(profileId) {
@@ -348,17 +316,7 @@ function enterApp(profileId) {
     updateProfileUI();
     renderView();
 
-    // Animate transition
-    if (introScreen) introScreen.style.opacity = '0';
     appContainer.classList.remove('hidden');
-
-    // Wait for transition then hide intro
-    setTimeout(() => {
-        if (introScreen) {
-            introScreen.classList.add('hidden');
-            introScreen.style.opacity = '1';
-        }
-    }, 500);
 
     // Save active state
     saveToFirebase();
@@ -668,91 +626,45 @@ function exportToWordFixed() {
 }
 
 // Profile UI & Logic
+// Profile UI Removed
 function setupProfileUI() {
-    // Open Modal
-    profileTrigger.addEventListener('click', () => {
-        renderProfilesList();
-        profileModal.classList.remove('hidden');
-    });
-
-    // Close Modal
-    closeModalBtn.addEventListener('click', () => {
-        profileModal.classList.add('hidden');
-    });
-
-    profileModal.addEventListener('click', (e) => {
-        if (e.target === profileModal) {
-            profileModal.classList.add('hidden');
-        }
-    });
-
-    // Create New Profile
-    createProfileBtn.addEventListener('click', () => {
-        const name = newProfileNameInput.value.trim();
-        if (!name) return alert('Digite um nome para o perfil.');
-
-        const id = 'profile_' + Date.now();
-
-        // Create new profile entry
-        appState.profiles[id] = {
-            id: id,
-            name: name,
-            data: createDefaultData()
-        };
-
-        // Switch to it immediately
-        switchProfile(id);
-
-        newProfileNameInput.value = '';
-        profileModal.classList.add('hidden');
-        alert(`Perfil "${name}" criado e ativado!`);
-    });
+    // Removed
 }
 
+// Profile Rendering Removed
 function renderProfilesList() {
-    profilesList.innerHTML = '';
-
-    Object.values(appState.profiles).forEach(profile => {
-        const li = document.createElement('li');
-        li.className = `profile-item ${profile.id === appState.currentProfileId ? 'active' : ''}`;
-
-        const nameSpan = document.createElement('span');
-        nameSpan.className = 'profile-item-name';
-        nameSpan.textContent = profile.name;
-
-        li.appendChild(nameSpan);
-
-        // Delete button (only if not daiane and more than 1 profile exists - optional, but good for safety)
-        if (profile.id !== 'daiane') {
-            const delBtn = document.createElement('button');
-            delBtn.className = 'delete-profile-btn';
-            delBtn.innerHTML = 'Excluir';
-            delBtn.onclick = (e) => {
-                e.stopPropagation(); // prevent switching
-                deleteProfile(profile.id);
-            };
-            li.appendChild(delBtn);
-        }
-
-        // Click to switch
-        li.addEventListener('click', () => {
-            if (appState.currentProfileId !== profile.id) {
-                switchProfile(profile.id);
-                profileModal.classList.add('hidden');
-            }
-        });
-
-        profilesList.appendChild(li);
-    });
+    // Removed
 }
 
 
 
+
+function loadProfileToState(profileId) {
+    const profile = appState.profiles[profileId];
+    if (profile && profile.data) {
+        state.config = { ...profile.data.config };
+        // Deep copy to ensure we have a working copy
+        state.days = JSON.parse(JSON.stringify(profile.data.days));
+    }
+}
+
+function switchProfile(profileId) {
+    if (!appState.profiles[profileId]) return;
+
+    appState.currentProfileId = profileId;
+    loadProfileToState(profileId);
+    updateProfileUI();
+    renderView();
+
+    // Persist the switch
+    saveToFirebase();
+}
 
 function updateProfileUI() {
     const current = appState.profiles[appState.currentProfileId];
     if (current) {
-        currentProfileName.textContent = current.name;
+        // currentProfileName gone, but maybe we want to update the sidebar name?
+        if (userDisplayName) userDisplayName.textContent = current.name;
     }
 }
 

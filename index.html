@@ -14,26 +14,27 @@
     <!-- Firebase SDKs (Modular) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, collection } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
         // Configuração do Firebase
-         const firebaseConfig = {
-    apiKey: "AIzaSyCWVRlYfq2E4lwlNKOM7ZQiLYpF1hCawB4",
-    authDomain: "maletzinho-5e2e1.firebaseapp.com",
-    projectId: "maletzinho-5e2e1",
-    storageBucket: "maletzinho-5e2e1.firebasestorage.app",
-    messagingSenderId: "393007470469",
-    appId: "1:393007470469:web:d6650081f8f6d0d4af96ec"
-  };
+        const firebaseConfig = {
+            apiKey: "AIzaSyCWVRlYfq2E4lwlNKOM7ZQiLYpF1hCawB4",
+            authDomain: "maletzinho-5e2e1.firebaseapp.com",
+            projectId: "maletzinho-5e2e1",
+            storageBucket: "maletzinho-5e2e1.firebasestorage.app",
+            messagingSenderId: "393007470469",
+            appId: "1:393007470469:web:d6650081f8f6d0d4af96ec"
+        };
 
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
+        const provider = new GoogleAuthProvider();
         // Expose to window for script.js to access
-        window.firebaseAuth = { auth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut };
+        window.firebaseAuth = { auth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, signInWithPopup, provider, GoogleAuthProvider };
         window.firebaseDb = { db, doc, getDoc, setDoc, collection };
 
         // Dispatch event to signal Firebase is ready
@@ -52,12 +53,14 @@
             <h2 id="login-title">Acesse sua conta</h2>
 
             <form class="login-form" onsubmit="return false;">
-                <input type="email" id="login-email" placeholder="Seu E-mail" class="login-input" required>
-                <input type="password" id="login-password" placeholder="Sua Senha" class="login-input" required>
-
-                <div class="login-actions">
-                    <button type="button" id="btn-login" class="action-btn primary">Entrar</button>
-                    <button type="button" id="btn-signup" class="action-btn secondary">Criar Conta</button>
+                <!-- Email/Password fields removed -->
+                <div style="margin-top: 10px; display: flex; justify-content: center; width: 100%;">
+                    <button type="button" id="btn-google-login" class="action-btn"
+                        style="background-color: #fff; color: #757575; display: flex; align-items: center; justify-content: center; width: 100%; border: 1px solid #ddd; cursor: pointer;">
+                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google"
+                            style="width: 18px; height: 18px; margin-right: 8px;">
+                        Entrar com Google
+                    </button>
                 </div>
                 <p id="auth-error" style="color: #ef4444; margin-top: 10px; display: none;"></p>
                 <p id="auth-loading" style="color: #aecbf7; margin-top: 10px; display: none;">Conectando...</p>
@@ -65,44 +68,7 @@
         </div>
     </div>
 
-    <!-- Profile Selection Screen (Hidden by default, shown after login) -->
-    <div id="intro-screen" class="intro-screen hidden">
-        <div class="intro-card">
-            <div class="intro-brand">
-                <h1>Planejador</h1>
-                <div style="font-size: 0.9rem; color: #aecbf7; margin-top:5px;">Logado como: <span
-                        id="user-email-display"></span></div>
-                <button id="btn-logout"
-                    style="background:none; border:none; color: #ef4444; cursor:pointer; font-size: 0.8rem; margin-top: 5px;">Sair
-                    / Desconectar</button>
-            </div>
-            <h2>Quem vai planejar hoje?</h2>
-
-            <div class="intro-profiles-list" id="intro-profiles-list">
-                <!-- Profiles injected here -->
-            </div>
-
-            <div class="intro-new-profile">
-                <button id="intro-create-btn" class="action-btn secondary">+ Novo Perfil</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- New Profile Modal -->
-    <div id="intro-modal" class="modal-overlay hidden">
-        <div class="modal">
-            <header class="modal-header">
-                <h3>Criar Novo Perfil</h3>
-                <button id="intro-close-modal" class="close-btn">&times;</button>
-            </header>
-            <div class="modal-body">
-                <div class="new-profile-form">
-                    <input type="text" id="intro-profile-name" placeholder="Nome do perfil...">
-                    <button id="intro-submit-profile" class="action-btn primary">Criar e Entrar</button>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Profile Selection Screens Removed -->
 
     <div class="app-container hidden" id="app-container">
         <!-- Sidebar / Navigation -->
@@ -112,13 +78,17 @@
                 <p>Educação Infantil</p>
             </div>
 
-            <!-- Profile Selector (New) -->
-            <div class="profile-section" id="profile-trigger">
-                <div class="current-profile">
-                    <span class="profile-icon">👤</span>
-                    <span id="current-profile-name">Daiane</span>
+            <div class="user-profile-widget">
+                <div id="user-avatar-display" class="user-avatar">
+                    <!-- Avatar or cleanup handled by JS -->
+                    U
                 </div>
-                <span class="profile-switch-hint">Trocar</span>
+                <div class="profile-info">
+                    <span id="user-display-name" class="profile-name">Usuário</span>
+                    <button id="btn-logout-sidebar" class="logout-link">
+                        Sair da conta
+                    </button>
+                </div>
             </div>
 
             <nav class="week-nav">
@@ -233,27 +203,7 @@
         </div>
     </div>
 
-    <!-- Profile Modal -->
-    <div id="profile-modal" class="modal-overlay hidden">
-        <div class="modal">
-            <header class="modal-header">
-                <h3>Gerenciar Perfis</h3>
-                <button id="close-modal" class="close-btn">&times;</button>
-            </header>
-            <div class="modal-body">
-                <div class="new-profile-form">
-                    <input type="text" id="new-profile-name" placeholder="Nome do novo perfl...">
-                    <button id="create-profile-btn" class="action-btn primary">Criar</button>
-                </div>
-                <div class="profiles-list-container">
-                    <h4>Seus Perfis</h4>
-                    <ul id="profiles-list" class="profiles-list">
-                        <!-- Profiles injected here -->
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Profile Modals Removed -->
 
     <!-- PDF Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
