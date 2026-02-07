@@ -28,6 +28,128 @@ body {
     overflow: hidden;
 }
 
+/* Utility */
+.hidden {
+    display: none !important;
+}
+
+/* Intro Screen */
+.intro-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bg-dark);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    background-image:
+        radial-gradient(circle at 50% 10%, rgba(99, 102, 241, 0.15) 0%, transparent 30%),
+        radial-gradient(circle at 10% 90%, rgba(236, 72, 153, 0.15) 0%, transparent 30%);
+}
+
+.intro-card {
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid var(--border);
+    backdrop-filter: blur(10px);
+    padding: 3rem;
+    border-radius: 24px;
+    text-align: center;
+    max-width: 600px;
+    width: 90%;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+    animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.intro-brand {
+    margin-bottom: 2rem;
+}
+
+.intro-brand h1 {
+    font-family: var(--font-heading);
+    font-size: 2.5rem;
+    background: linear-gradient(to right, #818cf8, #c084fc);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 0.5rem;
+}
+
+.intro-card h2 {
+    font-size: 1.25rem;
+    margin-bottom: 2rem;
+    color: var(--text-dim);
+    font-weight: normal;
+}
+
+.intro-profiles-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    justify-content: center;
+    margin-bottom: 2rem;
+}
+
+.intro-profile-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    transition: transform 0.2s;
+    width: 100px;
+}
+
+.intro-profile-item:hover {
+    transform: translateY(-5px);
+}
+
+.intro-avatar {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, var(--primary), #a855f7);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: white;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    transition: border-color 0.2s;
+}
+
+.intro-profile-item:hover .intro-avatar {
+    border-color: #fff;
+}
+
+.intro-name {
+    font-weight: 600;
+    color: var(--text-light);
+    font-size: 1rem;
+    text-align: center;
+    line-height: 1.2;
+}
+
+.intro-new-profile {
+    border-top: 1px solid var(--border);
+    padding-top: 2rem;
+}
+
 /* App Layout */
 .app-container {
     display: flex;
@@ -35,6 +157,7 @@ body {
     background-image:
         radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.1) 0%, transparent 20%),
         radial-gradient(circle at 90% 80%, rgba(236, 72, 153, 0.1) 0%, transparent 20%);
+    transition: opacity 0.5s ease;
 }
 
 /* Sidebar */
@@ -47,6 +170,8 @@ body {
     flex-direction: column;
     gap: 2rem;
     z-index: 10;
+    overflow-y: auto;
+    /* Ensure content is accessible on small screens */
 }
 
 .brand h1 {
@@ -243,6 +368,11 @@ body {
 
 /* PRINT STYLES */
 @media print {
+    @page {
+        size: auto;
+        margin: 0mm;
+    }
+
     .app-container {
         display: none !important;
     }
@@ -266,8 +396,8 @@ body {
 
     /* Document Styling */
     .document-page {
-        padding: 10mm;
-        /* Standard margin */
+        padding: 2mm;
+        /* Minimize margins */
         font-family: 'Arial', sans-serif;
         box-sizing: border-box;
         width: 100%;
@@ -394,6 +524,221 @@ body {
     }
 }
 
+
+/* Profile Section in Sidebar */
+.profile-section {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.2s ease;
+    margin-bottom: 1rem;
+}
+
+.profile-section:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--primary);
+}
+
+.current-profile {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-weight: 500;
+    color: var(--text-light);
+}
+
+.profile-icon {
+    font-size: 1.2rem;
+}
+
+.profile-switch-hint {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+}
+
+/* Modal Styling */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(15, 23, 42, 0.8);
+    backdrop-filter: blur(4px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+.modal-overlay.hidden {
+    display: none;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.modal {
+    background: var(--bg-card);
+    width: 90%;
+    max-width: 500px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+    animation: modalIn 0.3s ease;
+}
+
+@keyframes modalIn {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.modal-header {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+}
+
+.modal-header h3 {
+    font-family: var(--font-heading);
+    font-size: 1.25rem;
+    color: var(--text-light);
+}
+
+.close-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    font-size: 1.5rem;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.close-btn:hover {
+    color: var(--text-light);
+}
+
+.modal-body {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.new-profile-form {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.new-profile-form input {
+    flex: 1;
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid var(--border);
+    color: var(--text-light);
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius);
+    font-family: var(--font-body);
+}
+
+.new-profile-form input:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.new-profile-form button {
+    padding: 0.75rem 1rem;
+    /* Fix height */
+}
+
+.profiles-list-container h4 {
+    color: var(--text-dim);
+    font-size: 0.875rem;
+    margin-bottom: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.profiles-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.profile-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid transparent;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.profile-item:hover {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: var(--border);
+}
+
+.profile-item.active {
+    background: rgba(99, 102, 241, 0.1);
+    border-color: rgba(99, 102, 241, 0.3);
+}
+
+.profile-item-name {
+    font-weight: 500;
+    color: var(--text-light);
+}
+
+.profile-item.active .profile-item-name {
+    color: var(--primary);
+}
+
+.delete-profile-btn {
+    opacity: 0;
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border: none;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    transition: all 0.2s;
+}
+
+.profile-item:hover .delete-profile-btn {
+    opacity: 1;
+}
+
+.delete-profile-btn:hover {
+    background: #ef4444;
+    color: white;
+}
+
 /* Mobile Responsive Adjustments */
 @media (max-width: 768px) {
     body {
@@ -478,4 +823,118 @@ body {
         padding: 0.75rem;
         font-size: 0.875rem;
     }
+}
+
+/* Document Styling - For PDF Generation */
+.document-page {
+    padding: 2mm;
+    font-family: 'Arial', sans-serif;
+    box-sizing: border-box;
+    width: 210mm;
+    /* A4 width */
+    background: white;
+    margin: 0 auto;
+}
+
+.plan-table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid black;
+    table-layout: fixed;
+}
+
+.plan-table th,
+.plan-table td {
+    border: 1px solid black;
+    padding: 5px;
+    vertical-align: top;
+    font-size: 9pt;
+    word-wrap: break-word;
+    color: black;
+}
+
+.plan-table th {
+    text-align: center;
+    font-weight: bold;
+    background: #f0f0f0;
+    /* Light grey for header if verified */
+}
+
+/* Shared styles that might be in media print but needed here too */
+.doc-header {
+    display: flex;
+    border: 1px solid black;
+    border-bottom: none;
+    align-items: center;
+    padding: 5px;
+}
+
+.logo-area {
+    width: 120px;
+    height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.logo-placeholder {
+    width: 80px;
+    height: 80px;
+    border: 1px dashed #999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}
+
+.logo-img {
+    max-width: 100px;
+    max-height: 90px;
+    object-fit: contain;
+}
+
+.header-text {
+    flex: 1;
+    text-align: center;
+    padding-right: 120px;
+}
+
+.school-name {
+    font-size: 14pt;
+    font-weight: bold;
+    margin: 0 0 5px 0;
+    text-transform: uppercase;
+}
+
+.class-name {
+    font-size: 12pt;
+    font-style: italic;
+    font-weight: normal;
+    margin: 0;
+}
+
+.doc-info-bar {
+    border: 1px solid black;
+    border-top: 1px solid black;
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    padding: 5px;
+    font-weight: bold;
+    font-size: 10pt;
+}
+
+.section-block {
+    margin-bottom: 8px;
+}
+
+.section-label {
+    font-weight: bold;
+    display: block;
+    margin-bottom: 2px;
+    text-transform: uppercase;
+}
+
+.section-content {
+    white-space: pre-wrap;
 }

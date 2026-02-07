@@ -14,12 +14,56 @@
 </head>
 
 <body>
-    <div class="app-container">
+    <!-- Intro / Login Screen -->
+    <div id="intro-screen" class="intro-screen">
+        <div class="intro-card">
+            <div class="intro-brand">
+                <h1>Planejador</h1>
+                <p>Educação Infantil</p>
+            </div>
+            <h2>Quem vai planejar hoje?</h2>
+
+            <div class="intro-profiles-list" id="intro-profiles-list">
+                <!-- Profiles injected here -->
+            </div>
+
+            <div class="intro-new-profile">
+                <button id="intro-create-btn" class="action-btn secondary">+ Novo Perfil</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Profile Modal (Reused logic or specific for intro) -->
+    <div id="intro-modal" class="modal-overlay hidden">
+        <div class="modal">
+            <header class="modal-header">
+                <h3>Criar Novo Perfil</h3>
+                <button id="intro-close-modal" class="close-btn">&times;</button>
+            </header>
+            <div class="modal-body">
+                <div class="new-profile-form">
+                    <input type="text" id="intro-profile-name" placeholder="Nome do perfil...">
+                    <button id="intro-submit-profile" class="action-btn primary">Criar e Entrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="app-container hidden" id="app-container">
         <!-- Sidebar / Navigation -->
         <aside class="sidebar">
             <div class="brand">
                 <h1>Planejador</h1>
                 <p>Educação Infantil</p>
+            </div>
+
+            <!-- Profile Selector (New) -->
+            <div class="profile-section" id="profile-trigger">
+                <div class="current-profile">
+                    <span class="profile-icon">👤</span>
+                    <span id="current-profile-name">Daiane</span>
+                </div>
+                <span class="profile-switch-hint">Trocar</span>
             </div>
 
             <nav class="week-nav">
@@ -51,10 +95,12 @@
             </nav>
 
             <div class="actions">
-                <button id="btn-preview" class="action-btn secondary">Visualizar</button>
                 <button id="btn-word" class="action-btn secondary" style="border-color: #2b579a; color: #aecbf7;">Salvar
                     em Word</button>
-                <button id="btn-print" class="action-btn primary">Gerar PDF / Imprimir</button>
+                <button id="btn-print" class="action-btn secondary">Imprimir</button>
+                <button id="btn-download-pdf" class="action-btn primary">Baixar PDF</button>
+                <button id="btn-clear" class="action-btn secondary"
+                    style="border-color: #ef4444; color: #fca5a5; margin-top: 1rem;">Limpar Tudo</button>
             </div>
         </aside>
 
@@ -131,6 +177,31 @@
             </table>
         </div>
     </div>
+
+    <!-- Profile Modal -->
+    <div id="profile-modal" class="modal-overlay hidden">
+        <div class="modal">
+            <header class="modal-header">
+                <h3>Gerenciar Perfis</h3>
+                <button id="close-modal" class="close-btn">&times;</button>
+            </header>
+            <div class="modal-body">
+                <div class="new-profile-form">
+                    <input type="text" id="new-profile-name" placeholder="Nome do novo perfl...">
+                    <button id="create-profile-btn" class="action-btn primary">Criar</button>
+                </div>
+                <div class="profiles-list-container">
+                    <h4>Seus Perfis</h4>
+                    <ul id="profiles-list" class="profiles-list">
+                        <!-- Profiles injected here -->
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PDF Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <!-- Library for DOCX Export -->
     <script src="https://unpkg.com/html-docx-js/dist/html-docx.js"></script>
