@@ -76,6 +76,17 @@ const btnDownloadPdf = document.getElementById('btn-download-pdf');
 const btnClear = document.getElementById('btn-clear');
 const btnWord = document.getElementById('btn-word');
 
+// Login Elements
+const loginScreen = document.getElementById('login-screen');
+const loginEmail = document.getElementById('login-email');
+const loginPass = document.getElementById('login-password');
+const btnLogin = document.getElementById('btn-login');
+const btnSignup = document.getElementById('btn-signup');
+const authError = document.getElementById('auth-error');
+const authLoading = document.getElementById('auth-loading');
+const userEmailDisplay = document.getElementById('user-email-display');
+const btnLogout = document.getElementById('btn-logout');
+
 // Intro DOM Elements
 const introScreen = document.getElementById('intro-screen');
 const introProfilesList = document.getElementById('intro-profiles-list');
@@ -94,15 +105,165 @@ const profilesList = document.getElementById('profiles-list');
 const newProfileNameInput = document.getElementById('new-profile-name');
 const createProfileBtn = document.getElementById('create-profile-btn');
 
+let currentUser = null; // Firebase User
+let saveTimeout = null;
+
 // Init
 function init() {
+    setupAuth();
     setupNavigation();
     setupProfileUI();
-    setupIntroUI(); // Setup the intro screen interactions
+    setupIntroUI();
     setupAutoSave();
+    // renderIntroProfiles(); // Moved to inside setupAuth or loadUserData
+}
 
-    // Check if we need to show intro or if we are already "logged in" (optional logic, for now force intro)
-    renderIntroProfiles();
+function setupAuth() {
+    // 1. Check Auth State
+    auth.onAuthStateChanged(user => {
+        if (user) {
+            // Logged In
+            currentUser = user;
+            console.log('User logged in:', user.email);
+
+            // UI Updates
+            if (loginScreen) loginScreen.classList.add('hidden');
+            if (introScreen) introScreen.classList.remove('hidden'); // Show Profile Selection
+            if (userEmailDisplay) userEmailDisplay.textContent = user.email;
+
+            // Load Data from Firestore
+            loadUserData(user.uid);
+        } else {
+            // Logged Out
+            currentUser = null;
+            console.log('User logged out');
+
+            // UI Updates
+            appContainer.classList.add('hidden');
+            if (introScreen) introScreen.classList.add('hidden');
+            if (loginScreen) loginScreen.classList.remove('hidden'); // Show Login
+        }
+    });
+
+    // 2. Login Action
+    if (btnLogin) {
+        btnLogin.addEventListener('click', () => {
+            const email = loginEmail.value;
+            const pass = loginPass.value;
+            if (!email || !pass) return showError('Preencha email e senha');
+
+            showLoading(true);
+            auth.signInWithEmailAndPassword(email, pass)
+                .catch(error => {
+                    showError(handleAuthError(error));
+                    showLoading(false);
+                });
+        });
+    }
+
+    // 3. Signup Action
+    if (btnSignup) {
+        btnSignup.addEventListener('click', () => {
+            const email = loginEmail.value;
+            const pass = loginPass.value;
+            if (!email || !pass) return showError('Preencha email e senha');
+
+            showLoading(true);
+            auth.createUserWithEmailAndPassword(email, pass)
+                .then((cred) => {
+                    // Create initial data structure in Firestore
+                    return db.collection('users').doc(cred.user.uid).set(appState);
+                })
+                .catch(error => {
+                    console.error("Signup error:", error);
+                    showError(handleAuthError(error));
+                    showLoading(false);
+                });
+        });
+    }
+
+    // 4. Logout Action
+    if (btnLogout) {
+        btnLogout.addEventListener('click', () => {
+            auth.signOut();
+            location.reload();
+        });
+    }
+}
+
+function showError(msg) {
+    if (authError) {
+        authError.textContent = msg;
+        authError.style.display = 'block';
+    } else {
+        alert(msg);
+    }
+}
+
+function showLoading(isLoading) {
+    if (authLoading) authLoading.style.display = isLoading ? 'block' : 'none';
+    if (authError) authError.style.display = 'none';
+}
+
+function handleAuthError(error) {
+    switch (error.code) {
+        case 'auth/invalid-email': return 'Email inválido.';
+        case 'auth/user-disabled': return 'Usuário desativado.';
+        case 'auth/user-not-found': return 'Usuário não encontrado.';
+        case 'auth/wrong-password': return 'Senha incorreta.';
+        case 'auth/email-already-in-use': return 'Email já cadastrado.';
+        case 'auth/weak-password': return 'Senha muito fraca (mínimo 6 caracteres).';
+        default: return error.message;
+    }
+}
+
+// Data Sync (Firestore)
+async function loadUserData(uid) {
+    const docRef = db.collection('users').doc(uid);
+
+    try {
+        const doc = await docRef.get();
+        if (doc.exists) {
+            const data = doc.data();
+            // Merge with local appState structure to ensure compatibility
+            appState = { ...appState, ...data };
+
+            // Check Profile integrity
+            if (!appState.profiles[appState.currentProfileId]) {
+                appState.currentProfileId = Object.keys(appState.profiles)[0] || 'daiane';
+            }
+
+            console.log('Data loaded from Firestore');
+
+            // Now render the profile selection screen
+            renderIntroProfiles();
+        } else {
+            // First time user (or deleted data), save current default state
+            console.log('No data found, creating default...');
+            await docRef.set(appState);
+            renderIntroProfiles();
+        }
+    } catch (error) {
+        console.error("Error getting document:", error);
+        alert('Erro ao carregar dados do servidor: ' + error.message);
+    }
+}
+
+function saveToFirebase() {
+    if (!currentUser) return;
+
+    // Setup debounced save
+    if (saveTimeout) clearTimeout(saveTimeout);
+
+    saveTimeout = setTimeout(() => {
+        db.collection('users').doc(currentUser.uid).set(appState)
+            .then(() => {
+                console.log("Document successfully written!");
+            })
+            .catch((error) => {
+                console.error("Error writing document: ", error);
+            });
+    }, 2000); // 2 seconds debounce
 }
 
 // Intro Logic
@@ -130,7 +291,7 @@ function setupIntroUI() {
         };
 
         // Save
-        localStorage.setItem(STORAGE_KEY_PROFILES, JSON.stringify(appState));
+        saveToFirebase();
 
         introModal.classList.add('hidden');
         enterApp(id);
@@ -170,16 +331,19 @@ function enterApp(profileId) {
     renderView();
 
     // Animate transition
-    introScreen.style.opacity = '0';
+    if (introScreen) introScreen.style.opacity = '0';
     appContainer.classList.remove('hidden');
 
     // Wait for transition then hide intro
     setTimeout(() => {
-        introScreen.classList.add('hidden');
+        if (introScreen) {
+            introScreen.classList.add('hidden');
+            introScreen.style.opacity = '1';
+        }
     }, 500);
 
-    // Save active state (optional, just to remember last used)
-    localStorage.setItem(STORAGE_KEY_PROFILES, JSON.stringify(appState));
+    // Save active state
+    saveToFirebase();
 }
 
 function setupNavigation() {
@@ -192,10 +356,12 @@ function setupNavigation() {
         });
     });
 
-    btnPrint.addEventListener('click', () => {
-        preparePrintView();
-        window.print();
-    });
+    if (btnPrint) {
+        btnPrint.addEventListener('click', () => {
+            preparePrintView();
+            window.print();
+        });
+    }
 
     if (btnDownloadPdf) {
         btnDownloadPdf.addEventListener('click', () => {
@@ -203,10 +369,12 @@ function setupNavigation() {
         });
     }
 
-    btnWord.addEventListener('click', () => {
-        preparePrintView();
-        exportToWordFixed();
-    });
+    if (btnWord) {
+        btnWord.addEventListener('click', () => {
+            preparePrintView();
+            exportToWordFixed();
+        });
+    }
 
     if (btnClear) {
         btnClear.addEventListener('click', () => {
@@ -215,7 +383,6 @@ function setupNavigation() {
             }
         });
     }
-
 }
 
 function updateNavUI() {
@@ -229,8 +396,7 @@ function updateNavUI() {
 }
 
 function setupAutoSave() {
-    // Save to local storage every change
-    // Modified to save to the current profile structure
+    // Save to Firebase every change
     const saveHandler = () => {
         // Update the current profile in AppState with the current Working State
         if (appState.profiles[appState.currentProfileId]) {
@@ -240,24 +406,13 @@ function setupAutoSave() {
             };
 
             // Persist AppState
-            try {
-                localStorage.setItem(STORAGE_KEY_PROFILES, JSON.stringify(appState));
-            } catch (e) {
-                if (e.name === 'QuotaExceededError' || e.code === 22) {
-                    alert('⚠️ Erro de Salvamento: O armazenamento do navegador está cheio!\n\nIsso geralmente acontece por usar imagens muito pesadas na Logo.\nTente usar uma imagem menor ou remover a logo atual para continuar salvando.');
-                } else {
-                    console.error('Erro ao salvar:', e);
-                }
-            }
+            saveToFirebase();
         }
     };
 
-    planForm.addEventListener('input', saveHandler);
-
-    // Also hook into other save points if necessary (like config inputs)
-    // The renderConfig() creates elements dynamically, so we handle their listeners inside renderConfig (updating state).
-    // But we need to make sure those updates also trigger persistence.
-    // The simplest way is to expose a global save function or ensure listeners call it.
+    if (planForm) {
+        planForm.addEventListener('input', saveHandler);
+    }
     window.saveCurrentState = saveHandler;
 }
 
