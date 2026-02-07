@@ -13,19 +13,19 @@
     <link rel="stylesheet" href="styles.css">
     <!-- Firebase SDKs (Modular) -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, collection } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, collection } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
         // Configuração do Firebase
-        const firebaseConfig = {
-            apiKey: "AIzaSyCWVRLYfq2E4lwlNKOM7ZQiLyPf1hCawB4",
-            authDomain: "maletzinho-5e2e1.firebaseapp.com",
-            projectId: "maletzinho-5e2e1",
-            storageBucket: "maletzinho-5e2e1.firebasestorage.app",
-            messagingSenderId: "393007470469",
-            appId: "1:393007470469:web:d6650081f8f6d0d4af96ec"
-        };
+         const firebaseConfig = {
+    apiKey: "AIzaSyCWVRlYfq2E4lwlNKOM7ZQiLYpF1hCawB4",
+    authDomain: "maletzinho-5e2e1.firebaseapp.com",
+    projectId: "maletzinho-5e2e1",
+    storageBucket: "maletzinho-5e2e1.firebasestorage.app",
+    messagingSenderId: "393007470469",
+    appId: "1:393007470469:web:d6650081f8f6d0d4af96ec"
+  };
 
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
@@ -51,17 +51,17 @@
             </div>
             <h2 id="login-title">Acesse sua conta</h2>
 
-            <div class="login-form">
-                <input type="email" id="login-email" placeholder="Seu E-mail" class="login-input">
-                <input type="password" id="login-password" placeholder="Sua Senha" class="login-input">
+            <form class="login-form" onsubmit="return false;">
+                <input type="email" id="login-email" placeholder="Seu E-mail" class="login-input" required>
+                <input type="password" id="login-password" placeholder="Sua Senha" class="login-input" required>
 
                 <div class="login-actions">
-                    <button id="btn-login" class="action-btn primary">Entrar</button>
-                    <button id="btn-signup" class="action-btn secondary">Criar Conta</button>
+                    <button type="button" id="btn-login" class="action-btn primary">Entrar</button>
+                    <button type="button" id="btn-signup" class="action-btn secondary">Criar Conta</button>
                 </div>
                 <p id="auth-error" style="color: #ef4444; margin-top: 10px; display: none;"></p>
                 <p id="auth-loading" style="color: #aecbf7; margin-top: 10px; display: none;">Conectando...</p>
-            </div>
+            </form>
         </div>
     </div>
 
