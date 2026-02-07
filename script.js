@@ -746,42 +746,7 @@ function renderProfilesList() {
     });
 }
 
-// Helper Functions
-function switchProfile(profileId) {
-    // 1. Save current state to current profile in AppState
-    if (appState.profiles[appState.currentProfileId]) {
-        appState.profiles[appState.currentProfileId].data = {
-            config: state.config,
-            days: state.days
-        };
-    }
 
-    // 2. Update Id
-    appState.currentProfileId = profileId;
-
-    // 3. Load new data into working State
-    loadProfileToState(profileId);
-
-    // 4. Update UI
-    updateProfileUI(); // Updates Sidebar Name
-    renderView(); // Re-renders form with new data
-
-    // 5. Persist the change in active ID
-    saveToFirebase();
-}
-
-function deleteProfile(profileId) {
-    if (!confirm('Tem certeza que deseja excluir este perfil?')) return;
-
-    // If deleting active profile, switch to daiane first
-    if (appState.currentProfileId === profileId) {
-        switchProfile('daiane');
-    }
-
-    delete appState.profiles[profileId];
-    saveToFirebase();
-    renderProfilesList(); // Refresh list
-}
 
 
 function updateProfileUI() {
