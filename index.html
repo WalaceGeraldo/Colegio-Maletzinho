@@ -12,34 +12,8 @@
         rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
     <!-- Firebase SDKs (Modular) -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-        import { getFirestore, doc, getDoc, setDoc, collection } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-
-        // Configuração do Firebase
-        const firebaseConfig = {
-            apiKey: "AIzaSyCWVRlYfq2E4lwlNKOM7ZQiLYpF1hCawB4",
-            authDomain: "maletzinho-5e2e1.firebaseapp.com",
-            projectId: "maletzinho-5e2e1",
-            storageBucket: "maletzinho-5e2e1.firebasestorage.app",
-            messagingSenderId: "393007470469",
-            appId: "1:393007470469:web:d6650081f8f6d0d4af96ec"
-        };
-
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-
-        const provider = new GoogleAuthProvider();
-        // Expose to window for script.js to access
-        window.firebaseAuth = { auth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, signInWithPopup, provider, GoogleAuthProvider };
-        window.firebaseDb = { db, doc, getDoc, setDoc, collection };
-
-        // Dispatch event to signal Firebase is ready
-        window.dispatchEvent(new Event('firebase-ready'));
-    </script>
+    <!-- Firebase Init (Moved to separate file) -->
+    <script type="module" src="firebase-init.js"></script>
 </head>
 
 <body>
