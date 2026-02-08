@@ -62,7 +62,6 @@ let state = {
 };
 
 // Initialize Data
-// loadAppData(); // Deprecated for Firebase
 // We wait for init() to setup auth
 
 
@@ -78,15 +77,13 @@ const btnWord = document.getElementById('btn-word');
 
 // Login Elements
 const loginScreen = document.getElementById('login-screen');
-// Elements removed: loginEmail, loginPass, btnLogin, btnSignup (not in use)
 const authError = document.getElementById('auth-error');
 const authLoading = document.getElementById('auth-loading');
 const userDisplayName = document.getElementById('user-display-name');
 const btnLogout = document.getElementById('btn-logout-sidebar'); // Corrected ID from index.html check
 const btnGoogleLogin = document.getElementById('btn-google-login');
 
-// Intro DOM Elements (Removed)
-// Profile DOM Elements (Removed)
+
 
 let currentUser = null; // Firebase User
 let saveTimeout = null;
@@ -297,17 +294,7 @@ function saveToFirebase() {
     }, 2000); // 2 seconds debounce
 }
 
-// Intro Logic
-// Intro Logic Removed
-function setupIntroUI() {
-    // Removed
-}
 
-
-// Profile Rendering Removed
-function renderIntroProfiles() {
-    // Removed
-}
 
 function enterApp(profileId) {
     // Switch to profile
@@ -747,16 +734,7 @@ function waitForImages(root) {
     })));
 }
 
-// Profile UI & Logic
-// Profile UI Removed
-function setupProfileUI() {
-    // Removed
-}
 
-// Profile Rendering Removed
-function renderProfilesList() {
-    // Removed
-}
 
 
 
@@ -770,17 +748,7 @@ function loadProfileToState(profileId) {
     }
 }
 
-function switchProfile(profileId) {
-    if (!appState.profiles[profileId]) return;
 
-    appState.currentProfileId = profileId;
-    loadProfileToState(profileId);
-    updateProfileUI();
-    renderView();
-
-    // Persist the switch
-    saveToFirebase();
-}
 
 function updateProfileUI() {
     const current = appState.profiles[appState.currentProfileId];
